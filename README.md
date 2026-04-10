@@ -64,6 +64,44 @@ This project was built as part of the Prodesk IT Internship (Week 3 - API Integr
 6. Handles errors and loading states
 
 ---
+## ⚔️ Battle Mode
+
+Battle Mode is an advanced feature that allows users to compare two GitHub profiles.
+
+### 🔍 How It Works
+- User enters two GitHub usernames
+- The app fetches data for both users simultaneously using the GitHub API
+- It compares them based on:
+  - Followers count OR
+  - Total stars (calculated from repositories)
+
+### 🧠 Logic Used
+- Fetch both users' data using `Promise.all()`
+- Fetch repositories for each user
+- Loop through repositories and calculate total stars using `stargazers_count`
+- Compare both values to determine the winner
+
+### 🏆 Result
+- The user with higher score is marked as:
+  - 🟢 Winner (highlighted in green)
+- The other user is marked as:
+  - 🔴 Loser (highlighted in red)
+
+### 💡 Example
+If:
+- User A → 120 followers  
+- User B → 95 followers  
+
+👉 User A is declared the winner
+
+---
+
+This feature demonstrates real-world problem solving using:
+- Async/Await
+- API handling
+- Array iteration
+- Conditional rendering
+
 
 ## 📌 Folder Structure
 /project
