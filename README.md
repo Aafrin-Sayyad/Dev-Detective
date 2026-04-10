@@ -86,6 +86,20 @@ This project was built as part of the Prodesk IT Internship (Week 3 - API Integr
 This project was completed as part of the Prodesk IT Internship Program.
 
 ---
+## 📸 Screenshots
+
+### 🏠 Home Page
+![Home](home.png)
+
+### 🔍 Search Result
+![Search](search.png)
+
+### ❌ Error State
+![Error](error.png)
+
+### ⚔️ Battle Mode
+![Battle](battle.png)
+
 
 ## 📬 Author
 Sayyad Aafrin 
