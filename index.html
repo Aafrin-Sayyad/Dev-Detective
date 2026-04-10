@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dev Detective</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f1a;
+      --surface: #151827;
+      --surface2: #1c2035;
+      --border: #2a2f4a;
+      --accent: #e8ff5a;
+      --accent2: #5af0ff;
+      --text: #e8eaf6;
+      --muted: #7b82a8;
+      --error: #ff5a7e;
+      --win: #5affb2;
+      --lose: #ff5a7e;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 100px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% -10%, rgba(232,255,90,0.07) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 90% 90%, rgba(90,240,255,0.05) 0%, transparent 60%);
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeDown 0.6s ease both;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--text) 40%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .subtitle {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Mode Toggle ── */
+    .mode-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 36px;
+      animation: fadeDown 0.65s ease both;
+    }
+    .mode-btn {
+      padding: 10px 28px;
+      font-family: var(--sans);
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .mode-btn.active { background: var(--accent); color: #0d0f1a; }
+    .mode-btn:not(.active):hover { color: var(--text); }
+
+    /* ── Search Area ── */
+    .search-area {
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 36px;
+      animation: fadeDown 0.7s ease both;
+    }
+    .single-search { display: flex; }
+    .battle-search { display: none; gap: 14px; align-items: flex-end; }
+
+    .search-box {
+      flex: 1;
+      display: flex;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .search-box:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(232,255,90,0.1);
+    }
+    .search-icon { padding: 0 14px; display: flex; align-items: center; color: var(--muted); font-size: 16px; flex-shrink: 0; }
+    .search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: var(--mono); font-size: 14px; color: var(--text); padding: 15px 0; min-width: 0;
+    }
+    .search-input::placeholder { color: var(--muted); }
+    .search-btn {
+      background: var(--accent); color: #0d0f1a; border: none; padding: 0 24px;
+      font-family: var(--sans); font-weight: 600; font-size: 14px; cursor: pointer;
+      transition: background 0.2s, transform 0.1s; flex-shrink: 0;
+    }
+    .search-btn:hover { background: #f5ff80; }
+    .search-btn:active { transform: scale(0.97); }
+
+    .battle-col { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+    .battle-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; padding-left: 2px; }
+    .label-a { color: var(--accent); }
+    .label-b { color: var(--accent2); }
+    .vs-pill {
+      font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--muted);
+      padding-bottom: 2px; flex-shrink: 0;
+    }
+    .battle-go {
+      background: var(--accent); color: #0d0f1a; border: none; padding: 15px 20px;
+      font-family: var(--sans); font-weight: 700; font-size: 13px; cursor: pointer;
+      border-radius: 12px; transition: background 0.2s, transform 0.1s; white-space: nowrap; flex-shrink: 0;
+    }
+    .battle-go:hover { background: #f5ff80; }
+    .battle-go:active { transform: scale(0.97); }
+
+    /* ── Status ── */
+    #status {
+      text-align: center; font-family: var(--mono); font-size: 13px;
+      min-height: 24px; margin-bottom: 12px; width: 100%; max-width: 700px;
+    }
+    .loading { color: var(--accent2); }
+    .error-msg { color: var(--error); }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(90,240,255,0.2); border-top-color: var(--accent2);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Cards ── */
+    #profile-area { width: 100%; max-width: 700px; display: none; }
+    #profile-area.visible { display: block; animation: fadeUp 0.5s ease both; }
+
+    .card {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 28px 32px; margin-bottom: 18px;
+    }
+    .profile-header { display: flex; gap: 22px; align-items: flex-start; }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar { width: 84px; height: 84px; border-radius: 50%; border: 2px solid var(--border); display: block; object-fit: cover; }
+    .avatar-ring {
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 1.5px dashed var(--accent); opacity: 0.4;
+      animation: rotate-ring 8s linear infinite;
+    }
+    @keyframes rotate-ring { to { transform: rotate(360deg); } }
+
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 1.5rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .profile-login { font-family: var(--mono); font-size: 13px; color: var(--accent); margin-bottom: 8px; }
+    .profile-bio { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .profile-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+    .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; text-align: center; }
+    .stat-num { font-family: var(--mono); font-weight: 700; font-size: 1rem; color: var(--accent); display: block; }
+    .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .profile-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border); }
+    .meta-item { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .meta-item a { color: var(--accent2); text-decoration: none; }
+    .meta-item a:hover { text-decoration: underline; }
+    .meta-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    .section-title {
+      font-family: var(--mono); font-size: 10px; letter-spacing: 3px;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .repo-list { display: flex; flex-direction: column; gap: 10px; }
+    .repo-item {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; transition: border-color 0.2s, transform 0.15s; text-decoration: none; color: inherit;
+    }
+    .repo-item:hover { border-color: var(--accent); transform: translateX(4px); }
+    .repo-left { flex: 1; min-width: 0; }
+    .repo-name { font-weight: 600; font-size: 14px; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+    .repo-desc { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .repo-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .repo-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .repo-lang {
+      background: rgba(232,255,90,0.1); color: var(--accent);
+      font-family: var(--mono); font-size: 10px; padding: 2px 7px;
+      border-radius: 20px; border: 1px solid rgba(232,255,90,0.2);
+    }
+
+    /* ── Battle Area ── */
+    #battle-area { width: 100%; max-width: 900px; display: none; }
+    #battle-area.visible { display: block; animation: fadeUp 0.5s ease both; }
+
+    .battle-verdict { text-align: center; margin-bottom: 24px; }
+    .verdict-label { font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .verdict-winner { font-size: 1.5rem; font-weight: 800; color: var(--win); }
+    .verdict-detail { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .battle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .battle-card {
+      background: var(--surface); border: 2px solid var(--border);
+      border-radius: 16px; padding: 22px; transition: border-color 0.4s, box-shadow 0.4s;
+      position: relative; overflow: hidden;
+    }
+    .battle-card.winner { border-color: var(--win); box-shadow: 0 0 30px rgba(90,255,178,0.1); }
+    .battle-card.loser { border-color: var(--lose); box-shadow: 0 0 20px rgba(255,90,126,0.05); opacity: 0.75; }
+
+    .battle-badge {
+      position: absolute; top: 14px; right: 14px;
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .badge-win { background: rgba(90,255,178,0.12); color: var(--win); border: 1px solid rgba(90,255,178,0.3); }
+    .badge-lose { background: rgba(255,90,126,0.1); color: var(--lose); border: 1px solid rgba(255,90,126,0.2); }
+
+    .b-avatar-wrap { position: relative; display: inline-block; margin-bottom: 10px; }
+    .b-avatar { width: 68px; height: 68px; border-radius: 50%; border: 2px solid var(--border); object-fit: cover; display: block; }
+    .b-ring {
+      position: absolute; inset: -4px; border-radius: 50%;
+      border: 1.5px dashed var(--border); opacity: 0.4;
+      animation: rotate-ring 10s linear infinite;
+    }
+    .winner .b-ring { border-color: var(--win); opacity: 0.7; }
+    .loser .b-ring { border-color: var(--lose); }
+
+    .b-name { font-size: 1.05rem; font-weight: 800; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .b-login { font-family: var(--mono); font-size: 11px; color: var(--accent); margin-bottom: 8px; }
+    .b-bio { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .b-stats { display: flex; flex-direction: column; gap: 7px; }
+    .b-row { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 11px; }
+    .b-label { color: var(--muted); }
+    .b-val { font-weight: 700; color: var(--text); }
+    .b-val.hl { color: var(--accent); }
+    .b-divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+    .b-repo {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 10px; border-radius: 7px; background: var(--surface2);
+      border: 1px solid var(--border); margin-bottom: 6px;
+      text-decoration: none; color: inherit; transition: border-color 0.15s;
+    }
+    .b-repo:hover { border-color: var(--accent2); }
+    .b-repo-name { font-size: 12px; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+    .b-repo-stars { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+    /* ── Empty ── */
+    #empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--muted); font-family: var(--mono); font-size: 13px;
+      animation: fadeDown 0.6s ease both;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .battle-search { flex-wrap: wrap; }
+      .battle-grid { grid-template-columns: 1fr; }
+      .profile-header { flex-direction: column; align-items: center; text-align: center; }
+      .profile-stats, .profile-meta { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Dev Detective</h1>
+    <p class="subtitle">// uncover any developer's github identity</p>
+  </header>
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-single" onclick="setMode('single')">🔍 Search</button>
+    <button class="mode-btn" id="btn-battle" onclick="setMode('battle')">⚔️ Battle Mode</button>
+  </div>
+
+  <div class="search-area">
+    <!-- Single -->
+    <div class="single-search" id="single-search">
+      <div class="search-box">
+        <span class="search-icon">👤</span>
+        <input class="search-input" id="search-input" type="text" placeholder="Enter GitHub username…" autocomplete="off" spellcheck="false"/>
+        <button class="search-btn" onclick="doSingleSearch()">Search</button>
+      </div>
+    </div>
+
+    <!-- Battle -->
+    <div class="battle-search" id="battle-search">
+      <div class="battle-col">
+        <span class="battle-label label-a">Player A</span>
+        <div class="search-box">
+          <span class="search-icon">🅰️</span>
+          <input class="search-input" id="input-a" type="text" placeholder="First username…" autocomplete="off" spellcheck="false"/>
+        </div>
+      </div>
+      <div class="vs-pill">VS</div>
+      <div class="battle-col">
+        <span class="battle-label label-b">Player B</span>
+        <div class="search-box">
+          <span class="search-icon">🅱️</span>
+          <input class="search-input" id="input-b" type="text" placeholder="Second username…" autocomplete="off" spellcheck="false"/>
+        </div>
+      </div>
+      <button class="battle-go" onclick="doBattle()">⚔️ Fight!</button>
+    </div>
+  </div>
+
+  <div id="status"></div>
+
+  <!-- Single result -->
+  <div id="profile-area">
+    <div class="card" id="profile-main"></div>
+    <div class="card" id="profile-repos"></div>
+  </div>
+
+  <!-- Battle result -->
+  <div id="battle-area">
+    <div class="battle-verdict" id="battle-verdict"></div>
+    <div class="battle-grid" id="battle-grid"></div>
+  </div>
+
+  <div id="empty-state">
+    <span class="empty-icon">🕵️</span>
+    Search a GitHub username above —<br>or switch to Battle Mode to face two devs off.
+  </div>
+
+  <script>
+    // ── Helpers ─────────────────────────────────────
+    const $ = id => document.getElementById(id);
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    function fmtNum(n) {
+      if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return n;
+    }
+    function totalStars(repos) { return repos.reduce((s, r) => s + r.stargazers_count, 0); }
+
+    function setStatus(html) { $('status').innerHTML = html; }
+    function showLoading(msg) {
+      setStatus(`<span class="loading"><span class="spinner"></span>${msg}</span>`);
+      $('empty-state').style.display = 'none';
+    }
+    function showError(msg) {
+      setStatus(`<span class="error-msg">⚠ ${msg}</span>`);
+      $('empty-state').style.display = 'none';
+    }
+    function clearResults() {
+      $('profile-area').className = '';
+      $('battle-area').className = '';
+      $('profile-main').innerHTML = '';
+      $('profile-repos').innerHTML = '';
+      $('battle-grid').innerHTML = '';
+      $('battle-verdict').innerHTML = '';
+    }
+
+    // ── API ──────────────────────────────────────────
+    async function fetchUser(username) {
+      const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
+      if (res.status === 404) throw new Error(`User "${username}" not found`);
+      if (!res.ok) throw new Error(`GitHub API error ${res.status} — try again later`);
+      return res.json();
+    }
+    async function fetchRepos(reposUrl) {
+      const res = await fetch(`${reposUrl}?per_page=100&sort=pushed`);
+      return res.ok ? res.json() : [];
+    }
+
+    // ── Mode ─────────────────────────────────────────
+    function setMode(mode) {
+      $('btn-single').classList.toggle('active', mode === 'single');
+      $('btn-battle').classList.toggle('active', mode === 'battle');
+      $('single-search').style.display = mode === 'single' ? 'flex' : 'none';
+      $('battle-search').style.display = mode === 'battle' ? 'flex' : 'none';
+      clearResults();
+      setStatus('');
+      $('empty-state').style.display = 'block';
+    }
+
+    // ── Single Search ─────────────────────────────────
+    $('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSingleSearch(); });
+
+    async function doSingleSearch() {
+      const username = $('search-input').value.trim();
+      if (!username) return;
+      clearResults();
+      showLoading('Fetching profile…');
+      try {
+        const user = await fetchUser(username);
+        const repos = await fetchRepos(user.repos_url);
+        renderSingle(user, repos);
+      } catch (err) { showError(err.message); }
+    }
+
+    function renderSingle(user, repos) {
+      setStatus('');
+      const top5 = [...repos].sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at)).slice(0, 5);
+
+      $('profile-main').innerHTML = `
+        <div class="profile-header">
+          <div class="avatar-wrap">
+            <img class="avatar" src="${user.avatar_url}" alt="${user.login}"/>
+            <div class="avatar-ring"></div>
+          </div>
+          <div class="profile-info">
+            <div class="profile-name">${user.name || user.login}</div>
+            <div class="profile-login">@${user.login}</div>
+            <div class="profile-bio">${user.bio || 'No bio available.'}</div>
+            <div class="profile-stats">
+              <div class="stat"><span class="stat-num">${fmtNum(user.followers)}</span><span class="stat-label">Followers</span></div>
+              <div class="stat"><span class="stat-num">${fmtNum(user.following)}</span><span class="stat-label">Following</span></div>
+              <div class="stat"><span class="stat-num">${fmtNum(user.public_repos)}</span><span class="stat-label">Repos</span></div>
+              <div class="stat"><span class="stat-num">${fmtNum(totalStars(repos))}</span><span class="stat-label">Total Stars</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="profile-meta">
+          <span class="meta-item"><span class="meta-dot"></span>Joined ${formatDate(user.created_at)}</span>
+          ${user.location ? `<span class="meta-item"><span class="meta-dot"></span>${user.location}</span>` : ''}
+          ${user.blog ? `<span class="meta-item"><span class="meta-dot"></span><a href="${user.blog.startsWith('http') ? user.blog : 'https://' + user.blog}" target="_blank">${user.blog}</a></span>` : ''}
+          ${user.twitter_username ? `<span class="meta-item"><span class="meta-dot"></span>@${user.twitter_username}</span>` : ''}
+        </div>
+      `;
+
+      const reposHTML = top5.map(r => `
+        <a class="repo-item" href="${r.html_url}" target="_blank" rel="noopener">
+          <div class="repo-left">
+            <div class="repo-name">${r.name}</div>
+            <div class="repo-desc">${r.description || 'No description'}</div>
+          </div>
+          <div class="repo-right">
+            ${r.language ? `<span class="repo-lang">${r.language}</span>` : ''}
+            <span class="repo-meta">⭐ ${r.stargazers_count}</span>
+            <span class="repo-meta">🍴 ${r.forks_count}</span>
+          </div>
+        </a>
+      `).join('');
+
+      $('profile-repos').innerHTML = `
+        <div class="section-title">Latest Repositories</div>
+        <div class="repo-list">${reposHTML || '<p style="color:var(--muted);font-family:var(--mono);font-size:12px">No public repositories.</p>'}</div>
+      `;
+
+      $('profile-area').className = 'visible';
+    }
+
+    // ── Battle Mode ───────────────────────────────────
+    $('input-a').addEventListener('keydown', e => { if (e.key === 'Enter') doBattle(); });
+    $('input-b').addEventListener('keydown', e => { if (e.key === 'Enter') doBattle(); });
+
+    async function doBattle() {
+      const ua = $('input-a').value.trim();
+      const ub = $('input-b').value.trim();
+      if (!ua || !ub) { showError('Enter both usernames to start the battle.'); return; }
+      if (ua.toLowerCase() === ub.toLowerCase()) { showError('Enter two different usernames.'); return; }
+
+      clearResults();
+      showLoading('Fetching both profiles simultaneously…');
+
+      try {
+        // Fetch both users at the same time with Promise.all
+        const [userA, userB] = await Promise.all([fetchUser(ua), fetchUser(ub)]);
+        const [reposA, reposB] = await Promise.all([fetchRepos(userA.repos_url), fetchRepos(userB.repos_url)]);
+        renderBattle(userA, reposA, userB, reposB);
+      } catch (err) { showError(err.message); }
+    }
+
+    function buildBattleCard(user, repos, stars, isWinner) {
+      const top5 = [...repos].sort((a, b) => new Date(b.pushed_at) - new Date(a.pushed_at)).slice(0, 5);
+      const reposHTML = top5.map(r => `
+        <a class="b-repo" href="${r.html_url}" target="_blank" rel="noopener">
+          <span class="b-repo-name">${r.name}</span>
+          <span class="b-repo-stars">⭐ ${r.stargazers_count}</span>
+        </a>
+      `).join('');
+
+      return `
+        <div class="battle-card ${isWinner ? 'winner' : 'loser'}">
+          <div class="battle-badge ${isWinner ? 'badge-win' : 'badge-lose'}">${isWinner ? '🏆 Winner' : '💀 Loser'}</div>
+          <div class="b-avatar-wrap">
+            <img class="b-avatar" src="${user.avatar_url}" alt="${user.login}"/>
+            <div class="b-ring"></div>
+          </div>
+          <div class="b-name">${user.name || user.login}</div>
+          <div class="b-login">@${user.login}</div>
+          <div class="b-bio">${user.bio || 'No bio.'}</div>
+          <div class="b-stats">
+            <div class="b-row"><span class="b-label">⭐ Total Stars</span><span class="b-val hl">${fmtNum(stars)}</span></div>
+            <div class="b-row"><span class="b-label">👥 Followers</span><span class="b-val">${fmtNum(user.followers)}</span></div>
+            <div class="b-row"><span class="b-label">📦 Repos</span><span class="b-val">${fmtNum(user.public_repos)}</span></div>
+            <div class="b-row"><span class="b-label">📅 Joined</span><span class="b-val">${formatDate(user.created_at)}</span></div>
+          </div>
+          <div class="b-divider"></div>
+          <div class="section-title" style="font-size:9px;margin-bottom:8px;">Top Repos</div>
+          ${reposHTML || '<p style="font-size:11px;color:var(--muted);font-family:var(--mono)">No repos.</p>'}
+        </div>
+      `;
+    }
+
+    function renderBattle(userA, reposA, userB, reposB) {
+      setStatus('');
+      const starsA = totalStars(reposA);
+      const starsB = totalStars(reposB);
+      const aWins = starsA >= starsB;
+      const winner = aWins ? userA : userB;
+      const margin = Math.abs(starsA - starsB);
+
+      $('battle-verdict').innerHTML = `
+        <div class="verdict-label">⚔️ Battle Result — Judged by Total Stars</div>
+        <div class="verdict-winner">🏆 ${winner.name || winner.login} wins!</div>
+        <div class="verdict-detail">${fmtNum(starsA)} stars vs ${fmtNum(starsB)} stars · margin of ${fmtNum(margin)}</div>
+      `;
+
+      $('battle-grid').innerHTML =
+        buildBattleCard(userA, reposA, starsA, aWins) +
+        buildBattleCard(userB, reposB, starsB, !aWins);
+
+      $('battle-area').className = 'visible';
+    }
+  </script>
+</body>
+</html>
