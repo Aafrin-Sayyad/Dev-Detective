@@ -65,11 +65,6 @@ This project was built as part of the Prodesk IT Internship (Week 3 - API Integr
 
 ---
 
-## 🎥 Demo
-(Add your demo video link here)
-
----
-
 ## 📌 Folder Structure
 /project
   ├── index.html
