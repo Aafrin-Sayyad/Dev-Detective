@@ -1,5 +1,7 @@
 # 🔍 Dev Detective - GitHub User Search App
 
+🌐 **Live Demo:** https://prodesk-it-mission1.netlify.app
+
 ## 🚀 Project Overview
 Dev Detective is a web application that allows users to search for GitHub profiles and view detailed information using the GitHub API.
 
